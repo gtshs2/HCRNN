@@ -66,7 +66,6 @@ class HCRNN:
         self.maxlen = None
         self.embed_init,self.weight_init,self.bias_init,self.gate_bias_init,self.kern_init = init_way
 
-        self.save_path = configs.save_path
         self.prepare_model()
         tf.global_variables_initializer().run()
         self.saver = tf.train.Saver(tf.trainable_variables())
@@ -81,9 +80,9 @@ class HCRNN:
 
             self.best_epoch, best_check = write_log(self.logger, epoch, tr_pred_loss, val_pred_loss, te_pred_loss, self.k, val_recall_list, val_mrr_list,
                       te_recall_list, te_mrr_list, self.max_val_recall, self.max_te_recall, self.best_epoch,start_time)
-            if best_check:
-                if (self.configs.model_name == "HCRNN_v3") and (self.configs.random_seed == 10):
-                    self.saver.save(self.sess, self.save_path + '/model')
+            # if best_check:
+            #     if (self.configs.model_name == "HCRNN_v3") and (self.configs.random_seed == 10):
+            #         self.saver.save(self.sess, self.save_path + '/model')
             if self.early_stop.validate(val_recall_list[3]):
                 self.logger.info("Training process is stopped early")
                 break
@@ -108,29 +107,13 @@ class HCRNN:
                 W_decoder = tf.get_variable('W_decoder', [self.rnn_hidden_size, self.rnn_hidden_size], initializer=self.weight_init)
                 Bi_vector = tf.get_variable('Bi_vector', [1, self.rnn_hidden_size], initializer=self.weight_init)
                 bili = tf.get_variable('bili', [self.embedding_size, 2 * self.rnn_hidden_size], initializer=self.weight_init)
-            elif "gl_att" in self.att_type:
+            elif self.att_type == "bi_att":
                 W_g1 = tf.get_variable('W_g1', [self.rnn_hidden_size, self.embedding_size], initializer=self.weight_init)
                 W_g2 = tf.get_variable('W_g2', [self.rnn_hidden_size, self.embedding_size], initializer=self.weight_init)
                 W_l1 = tf.get_variable('W_l1', [self.rnn_hidden_size, self.rnn_hidden_size], initializer=self.weight_init)
                 W_l2 = tf.get_variable('W_l2', [self.rnn_hidden_size, self.rnn_hidden_size], initializer=self.weight_init)
                 Bi_l_vector = tf.get_variable('Bi_l_vector', [1, self.rnn_hidden_size], initializer=self.weight_init)
                 Bi_g_vector = tf.get_variable('Bi_g_vector', [1, self.rnn_hidden_size], initializer=self.weight_init)
-            if self.att_type == "gl_att_concat":
-                bili = tf.get_variable('bili', [self.embedding_size, 3 * self.rnn_hidden_size],
-                                       initializer=self.weight_init)
-            elif self.att_type == "gl_att_h_dot":
-                bili = tf.get_variable('bili', [self.embedding_size, 2 * self.rnn_hidden_size],
-                                       initializer=self.weight_init)
-            elif self.att_type == "gl_att_theta_dot":
-                bili = tf.get_variable('bili', [self.embedding_size, 2 * self.rnn_hidden_size],
-                                       initializer=self.weight_init)
-            elif self.att_type == "gl_att_theta_dot_concat":
-                bili = tf.get_variable('bili', [self.embedding_size, 3 * self.rnn_hidden_size],
-                                       initializer=self.weight_init)
-            elif self.att_type == "gl_att_theta_dot_norm":
-                bili = tf.get_variable('bili', [self.embedding_size, 2 * self.rnn_hidden_size],
-                                       initializer=self.weight_init)
-            elif self.att_type == "gl_att_theta_dot_concat_norm":
                 bili = tf.get_variable('bili', [self.embedding_size, 3 * self.rnn_hidden_size],
                                        initializer=self.weight_init)
 
@@ -257,22 +240,7 @@ class HCRNN:
             batch_loss_list.append(pred_loss_)
 
             recalls,mrrs,evaluation_point_count = evaluation(labels, preds, recalls, mrrs, evaluation_point_count, self.k)
-            '''
-            theta = self.sess.run([self.theta], feed_dict=feed_dict)
-            theta = np.squeeze(np.asarray(theta), axis=0)
-            
-            for itr in range(len(theta)):
-                current_real_last_topic_ = theta[itr,:]
-                #current_real_last_topic_ = real_last_topic_[itr, :]
-                max_idx = np.argmax(current_real_last_topic_)
-                max_value = np.max(current_real_last_topic_)
-                print("=" * 100)
-                if not max_idx in argmax_dict:
-                    argmax_dict[max_idx] = 0
-                argmax_dict[max_idx] += 1
-                print(max_idx,max_value)
-            print(argmax_dict)
-            '''
+
         recall_list = []
         mrr_list = []
         for itr in range(len(self.k)):

@@ -32,7 +32,7 @@ for itr0 in citeulike lastfm movielens
 do
 for itr1 in 10 20 30 40 50
 do
-python3 main.py --data ${itr0} --model_name NARM --att_type normal_att --loss_type Trilinear --lr 0.001 --random_seed ${itr1}
+python3 main.py --data ${itr0} --model_name STAMP --att_type normal_att --loss_type Trilinear --lr 0.001 --random_seed ${itr1}
 done
 done
 
